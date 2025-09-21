@@ -28,7 +28,7 @@ dims_dict = {  # dimensions of the initial signals
     'sensor_grav': 3
 }
 
-preproc_output_dir = 'preprocessed_data/'
+preproc_output_dir = '/content/BehavePassDB_benchmark/preprocessed_data/'
 # General
 task_index_dict = {
     'keystroke': '1',
@@ -59,7 +59,7 @@ decimals = 4
 
 
 # Training
-dataset_dir = 'preprocessed_data/'
+dataset_dir = '/content/BehavePassDB_benchmark/preprocessed_data/'
 val_label_dir = raw_data_dir + 'ValSet_labels/'
 batch_size = 512
 epochs = 150
@@ -74,7 +74,7 @@ train_info_log_dir = 'logs/'
 
 train_info_log_filename = model_name + '_train_recognition.txt'
 loss_log_filename = model_name + '_train_loss.txt'
-fig_dir = 'figures/'
+fig_dir = '/content/BehavePassDB_benchmark/figures/'
 
 # Model parameters
 units = 64
@@ -109,4 +109,4 @@ increments = {
 
 
 # Test
-competition_prediction_dir = 'MobileB2C_predictions/'
+competition_prediction_dir = '/content/BehavePassDB_benchmark/MobileB2C_predictions/'
