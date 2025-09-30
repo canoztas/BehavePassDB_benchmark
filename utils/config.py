@@ -28,7 +28,7 @@ dims_dict = {  # dimensions of the initial signals
     'sensor_grav': 3
 }
 
-preproc_output_dir = '/content/BehavePassDB_benchmark/preprocessed_data/'
+preproc_output_dir = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/preprocessed_data/'
 # General
 task_index_dict = {
     'keystroke': '1',
@@ -59,7 +59,7 @@ decimals = 4
 
 
 # Training
-dataset_dir = '/content/BehavePassDB_benchmark/preprocessed_data/'
+dataset_dir = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/preprocessed_data/'
 val_label_dir = raw_data_dir + 'ValSet_labels/'
 batch_size = 512
 epochs = 150
