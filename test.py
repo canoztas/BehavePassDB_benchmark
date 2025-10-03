@@ -248,3 +248,55 @@ for scenario in list(eers.keys()):
 
 
 
+# --- REPLACE THE OLD PRINT BLOCK WITH THIS ONE ---
+import ast  # You'll need this to safely parse the modality list string
+import numpy as np
+
+print("\n\nOur Benchmark (LSTM RNN with triplet loss and fusion at score level):")
+
+# A dictionary to map the full modality names to the required acronyms
+acronym_map = {
+    'keystroke': 'K', 'readtext': 'TR', 'gallery': 'GS', 'tap': 'T',
+    'accelerometer': 'A', 'gravity': 'Gr', 'gyroscope': 'Gy',
+    'linear_accelerometer': 'L', 'magnetometer': 'M', 'touch': 'Touch'
+}
+
+# Define the task order and display names to match the image
+task_display_map = {
+    'keystroke': 'Keystroke',
+    'readtext': 'Text Reading',
+    'gallery': 'Gallery Swip.',
+    'tap': 'Tap'
+}
+
+# Check if the necessary results exist before trying to print
+if 'random' in sorted_aucs and 'skilled' in sorted_aucs:
+    for i, (task_key, task_name) in enumerate(task_display_map.items()):
+        if task_key in sorted_aucs['random'] and task_key in sorted_aucs['skilled']:
+            
+            # --- Get the best results for Random and Skilled AUCs ---
+            # The dictionaries are already sorted, so the first item is the best
+            best_random_combo_str, best_random_auc = next(iter(sorted_aucs['random'][task_key].items()))
+            best_skilled_combo_str, best_skilled_auc = next(iter(sorted_aucs['skilled'][task_key].items()))
+
+            # --- Format the modality string from the best Random AUC result ---
+            modalities_str = ""
+            try:
+                # Safely convert the string "['modality1', 'modality2']" into a Python list
+                modality_list = ast.literal_eval(best_random_combo_str)
+                # Convert the full names in the list to their acronyms
+                modality_acronyms = [acronym_map.get(m, m) for m in modality_list]
+                modalities_str = ', '.join(modality_acronyms)
+            except (ValueError, SyntaxError):
+                modalities_str = best_random_combo_str # Fallback if parsing fails
+
+            # --- Print the formatted row using f-string alignment ---
+            # The numbers after the ':' control the column width for alignment
+            print(f"{i+1:<2} - {task_name:<15} {modalities_str:<25} {best_random_auc:<10.2f} {best_skilled_auc:<10.2f}")
+
+else:
+    print("Could not generate the report: 'random' or 'skilled' scenario results were not found.")
+
+# --- Print the final legend ---
+print("\nAcronyms of Tasks: K = Keystroke, TR = Text Reading, GS = Gallery Swiping, T = Tap.")
+print("Acronyms of Background Sensors: A = Accelerometer, Gr = Gravity Sensor, Gy = Gyroscope, L = Linear Accelerometer, M = Magnetometer.")
