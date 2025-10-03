@@ -15,7 +15,7 @@ if modality == 'touch':
     model_name = modality + '_' + train_touch_task + '_model'
 
 raw_data_dir = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/MobileB2C_BehavePassDB_DevSet_ValSet/'
-raw_test_data_dir = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/MobileB2C_BehavePassDB_TestSet/'
+raw_test_data_dir = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/MobileB2C_BehavePassDB_TestSet_Generated/'
 
 
 # Misc parameters
