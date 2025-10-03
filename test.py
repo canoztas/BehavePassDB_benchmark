@@ -39,8 +39,8 @@ comparisons = {}
 for task in full_task_list:
     comparison_file = raw_test_data_dir + 'Comparisons_TestSet_Task{}_{}.txt'.format(task_index_dict[task], task)
     with open(comparison_file) as fp:
-        comparisons[task] = [x.split(' ') for x in fp.read().split('\n')]
-    comparisons[task] = comparisons[task][:-1]
+        lines = fp.read().splitlines()
+        comparisons[task] = [x.split(' ') for x in lines if x]
 
 
 # # Slightly preprocessing test set
@@ -212,7 +212,7 @@ for folder in next(os.walk(competition_prediction_dir))[1]:
 labels = {}
 for task in full_task_list:
     labels[task] = {}
-    with open('reference_data_test_new/task%d_labels.txt' % int(task_index_dict[task])) as f:
+    with open(raw_test_data_dir + 'task%d_labels.txt' % int(task_index_dict[task])) as f:
         lines = f.read().splitlines()
     labels[task]['literal'] = lines
     labels[task]['general'] = np.array([0 if x == 'genuine' else 1 for x in lines])
