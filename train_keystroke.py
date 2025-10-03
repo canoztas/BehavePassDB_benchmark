@@ -53,7 +53,7 @@ for task in used_task_list:
         val_label_dict[task] = [0 if x == 'genuine' else 1 for x in val_label_dict[task]]
     val_label_dict[task] = np.ravel(val_label_dict[task])
 for task in used_task_list:
-    val_comparison_file = raw_data_dir + 'Comparisons_ValSet_Task{}_{}_updated.txt'.format(task_index_dict[task], task)
+    val_comparison_file = raw_data_dir + 'Comparisons_ValSet_Task{}_{}.txt'.format(task_index_dict[task], task)
     with open(val_comparison_file) as fp:
         val_comp_dict[task] = [x.split(' ') for x in fp.read().split('\n')]
     val_comp_dict[task] = val_comp_dict[task][:-1]
