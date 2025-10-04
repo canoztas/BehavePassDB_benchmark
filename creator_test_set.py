@@ -10,16 +10,16 @@ DEV_SET_PATH = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/MobileB2C_
 # Directory where the new test set files will be saved
 OUTPUT_DIR = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/MobileB2C_BehavePassDB_TestSet_Generated/'
 
+# --- NEW ---
+# Directory where the new, smaller TRAINING set will be saved
+NEW_TRAIN_DIR = '/content/drive/MyDrive/MobileB2C_Ongoing_BehavePassDB/MobileB2C_BehavePassDB_DevSet_ValSet_Generated/'
+
 # Percentage of subjects to use for the test set (e.g., 0.2 for 20%)
 TEST_SET_RATIO = 0.2
-
-# Which session to use for enrollment
-ENROLLMENT_SESSION = 'session1'
-
 # --- End of Configuration ---
 
 def create_test_set():
-    print("🚀 Starting the test set creation process...")
+    print("🚀 Starting the data splitting process...")
 
     # 1. Load the original dataset
     try:
@@ -33,21 +33,27 @@ def create_test_set():
     subjects = list(full_dataset.keys())
     random.shuffle(subjects)
 
-    # 2. Split subjects
+    # 2. Split subjects into training and testing pools
     split_index = int(len(subjects) * (1 - TEST_SET_RATIO))
     train_subjects = subjects[:split_index]
     test_subjects = subjects[split_index:]
     print(f"📊 Splitting into {len(train_subjects)} training and {len(test_subjects)} test subjects.")
 
-    # 3. Create and save the new training set
+    # --- MODIFIED: Save the new training set to its own directory ---
+    # 3. Create and save the new, smaller training set
     new_train_set = {subject: full_dataset[subject] for subject in train_subjects}
-    os.makedirs(os.path.dirname(DEV_SET_PATH), exist_ok=True)
-    new_train_path = DEV_SET_PATH.replace('.json', '_for_training.json')
+    os.makedirs(NEW_TRAIN_DIR, exist_ok=True)
+    # Get the original filename to use it in the new directory
+    original_filename = os.path.basename(DEV_SET_PATH)
+    new_train_path = os.path.join(NEW_TRAIN_DIR, original_filename)
     with open(new_train_path, 'w') as f:
         json.dump(new_train_set, f, indent=4)
     print(f"✅ New training set saved to: {new_train_path}")
     print("🚨 IMPORTANT: You must retrain your models using this new file!")
-
+    # --- END OF MODIFICATION ---
+    
+    # (The rest of the script for creating the test set remains the same)
+    
     # 4. Separate test data into enrollment and verification sets
     enrollment_data = defaultdict(dict)
     verification_data = defaultdict(dict)
@@ -72,11 +78,11 @@ def create_test_set():
         for session_id in verification_sessions:
             verification_data[f"{subject}_{session_id}"] = full_dataset[subject][session_id]
 
-    # 5. Generate files for each task
+    # 5. Generate test files for each task
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     for task in tasks:
-        print(f"⚙️ Generating files for task: '{task}'")
+        print(f"⚙️ Generating test files for task: '{task}'")
         comparisons = []
         labels = []
         
@@ -84,45 +90,36 @@ def create_test_set():
         verification_keys = list(verification_data.keys())
 
         for enroll_subject in valid_enroll_subjects:
-            # Genuine pairs
             genuine_verification_keys = [key for key in verification_keys if key.startswith(f"{enroll_subject}_")]
             for verif_key in genuine_verification_keys:
                 comparisons.append(f"{enroll_subject} {verif_key}")
                 labels.append("genuine")
 
-            # --- MODIFICATION START: Guarantees unique impostor pairs ---
             impostor_subjects = [s for s in valid_enroll_subjects if s != enroll_subject]
             num_impostor_trials_target = len(genuine_verification_keys)
             if not impostor_subjects: continue
 
-            # 1. Create a pool of all possible unique impostor pairs
             possible_impostor_pairs = []
             for impostor_subject in impostor_subjects:
                 impostor_verif_keys = [key for key in verification_keys if key.startswith(f"{impostor_subject}_")]
                 for verif_key in impostor_verif_keys:
                     possible_impostor_pairs.append(f"{enroll_subject} {verif_key}")
             
-            # 2. Shuffle the pool and sample the desired number of unique pairs
             random.shuffle(possible_impostor_pairs)
             num_to_sample = min(num_impostor_trials_target, len(possible_impostor_pairs))
             selected_impostor_pairs = possible_impostor_pairs[:num_to_sample]
 
-            # 3. Add the selected unique pairs and their labels
             for pair in selected_impostor_pairs:
                 comparisons.append(pair)
                 labels.append("impostor")
-            # --- MODIFICATION END ---
 
         temp = list(zip(comparisons, labels))
         random.shuffle(temp)
-        if not temp:
-            print(f"  -> ⚠️ No comparison pairs generated for task '{task}'.")
-            continue
+        if not temp: continue
         comparisons, labels = zip(*temp)
         
         task_index = tasks.index(task) + 1
         
-        # Save comparison and label files
         comp_filename = os.path.join(OUTPUT_DIR, f'Comparisons_TestSet_Task{task_index}_{task}.txt')
         with open(comp_filename, 'w') as f:
             f.write('\n'.join(comparisons))
@@ -131,7 +128,6 @@ def create_test_set():
         with open(label_filename, 'w') as f:
             f.write('\n'.join(labels))
 
-        # Save task-specific JSON files
         task_enroll_data = {s: {task: d[task]} for s, d in enrollment_data.items() if task in d}
         enroll_filename = os.path.join(OUTPUT_DIR, f'TestSet_Task{task_index}_{task}_enrolment.json')
         with open(enroll_filename, 'w') as f:
@@ -142,7 +138,7 @@ def create_test_set():
         with open(verif_filename, 'w') as f:
             json.dump(task_verif_data, f)
             
-    print(f"\n✅ All unique, task-specific files have been created in: '{OUTPUT_DIR}'")
+    print(f"\n✅ All test files have been created in: '{OUTPUT_DIR}'")
     print("🎉 Process complete!")
 
 if __name__ == '__main__':
