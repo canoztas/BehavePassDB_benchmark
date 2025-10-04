@@ -2,6 +2,7 @@ import json
 import os
 import random
 from collections import defaultdict
+import shutil
 
 # --- Configuration ---
 # Path to your original, full development set JSON file
@@ -20,6 +21,9 @@ TEST_SET_RATIO = 0.2
 
 def create_test_set():
     print("🚀 Starting the data splitting process...")
+    
+    source_dir = os.path.dirname(DEV_SET_PATH)
+    original_filename = os.path.basename(DEV_SET_PATH)
 
     # 1. Load the original dataset
     try:
@@ -39,23 +43,52 @@ def create_test_set():
     test_subjects = subjects[split_index:]
     print(f"📊 Splitting into {len(train_subjects)} training and {len(test_subjects)} test subjects.")
 
-    # --- MODIFIED: Save the new training set to its own directory ---
-    # 3. Create and save the new, smaller training set
+    # 3. Create and save the new, smaller training set in its own directory
     new_train_set = {subject: full_dataset[subject] for subject in train_subjects}
     os.makedirs(NEW_TRAIN_DIR, exist_ok=True)
-    # Get the original filename to use it in the new directory
-    original_filename = os.path.basename(DEV_SET_PATH)
+    
     new_train_path = os.path.join(NEW_TRAIN_DIR, original_filename)
     with open(new_train_path, 'w') as f:
         json.dump(new_train_set, f, indent=4)
     print(f"✅ New training set saved to: {new_train_path}")
-    print("🚨 IMPORTANT: You must retrain your models using this new file!")
-    # --- END OF MODIFICATION ---
+
+    # --- NEW: Copy all other files and folders to the new training directory ---
+    print(f"📋 Copying remaining files from '{source_dir}' to '{NEW_TRAIN_DIR}'...")
+    for item_name in os.listdir(source_dir):
+        # Skip the original DevSet.json file itself, as we've already created the new version
+        if item_name == original_filename:
+            continue
+
+        source_item_path = os.path.join(source_dir, item_name)
+        destination_item_path = os.path.join(NEW_TRAIN_DIR, item_name)
+
+        if os.path.isdir(source_item_path):
+            # If the destination directory already exists, remove it first to ensure a clean copy
+            if os.path.exists(destination_item_path):
+                shutil.rmtree(destination_item_path)
+            shutil.copytree(source_item_path, destination_item_path)
+        else: # It's a file
+            shutil.copy2(source_item_path, destination_item_path)
+    print("✅ Copying complete.")
+    # --- END OF NEW SECTION ---
+
+    print("🚨 IMPORTANT: You must retrain your models using the file in the new training directory!")
     
     # (The rest of the script for creating the test set remains the same)
     
     # 4. Separate test data into enrollment and verification sets
     enrollment_data = defaultdict(dict)
+    # ... (rest of the script is unchanged) ...
+    # 5. Generate test files for each task
+    # ... (rest of the script is unchanged) ...
+    print(f"\n✅ All test files have been created in: '{OUTPUT_DIR}'")
+    print("🎉 Process complete!")
+
+
+# The rest of the script below this line is truncated for brevity, as it remains unchanged.
+# Just ensure the code block above replaces the top part of your existing script.
+# ==============================================================================
+
     verification_data = defaultdict(dict)
     
     try:
@@ -78,7 +111,6 @@ def create_test_set():
         for session_id in verification_sessions:
             verification_data[f"{subject}_{session_id}"] = full_dataset[subject][session_id]
 
-    # 5. Generate test files for each task
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     for task in tasks:
@@ -137,9 +169,6 @@ def create_test_set():
         verif_filename = os.path.join(OUTPUT_DIR, f'TestSet_Task{task_index}_{task}_verification.json')
         with open(verif_filename, 'w') as f:
             json.dump(task_verif_data, f)
-            
-    print(f"\n✅ All test files have been created in: '{OUTPUT_DIR}'")
-    print("🎉 Process complete!")
 
 if __name__ == '__main__':
     create_test_set()
